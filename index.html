@@ -787,7 +787,7 @@
 
       .modal {
         width: min(640px, 100% - 32px);
-        max-height: min(85vh, 700px);
+        max-height: calc(100vh - 32px);
         background: var(--panel-2);
         border-radius: 16px;
         border: 1px solid rgba(255, 255, 255, 0.18);
@@ -799,6 +799,7 @@
       }
 
       .modalHeader {
+        flex-shrink: 0;
         padding: 14px 18px 10px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         display: flex;
@@ -813,9 +814,12 @@
       }
 
       .modalBody {
-        padding: 12px 18px 6px;
-        overflow: auto;
         flex: 1 1 auto;
+        min-height: 0;
+        padding: 12px 18px 32px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
       }
 
       .modalGrid {
@@ -883,15 +887,13 @@
       }
 
       .modalFooter {
+        flex-shrink: 0;
         padding: 10px 18px 12px;
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 12px;
-        flex-shrink: 0;
-        position: sticky;
-        bottom: 0;
         background: linear-gradient(
           to top,
           rgba(9, 16, 34, 0.98),
