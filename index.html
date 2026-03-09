@@ -388,6 +388,91 @@
         color: var(--muted);
       }
 
+      .executionSection {
+        padding: 10px 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .executionSection .executionLabel {
+        font-size: 10px;
+        letter-spacing: 0.24px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .executionGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+        gap: 6px 10px;
+      }
+
+      .storyRollup {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      .storyRollupLabel {
+        color: var(--muted-2);
+        font-size: 10px;
+      }
+
+      .storyRollupValue {
+        font-weight: 600;
+        color: var(--text);
+        margin-top: 2px;
+      }
+
+      .storyRollup.platform { border-left: 3px solid rgba(44, 120, 255, 0.7); }
+      .storyRollup.tenant { border-left: 3px solid rgba(43, 213, 118, 0.6); }
+      .storyRollup.blocked .storyRollupValue { color: var(--red); }
+
+      .storyList {
+        list-style: none;
+        margin: 8px 0 0;
+        padding: 0;
+      }
+
+      .storyItem {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 8px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .storyItemBlocked {
+        border-color: rgba(255, 91, 110, 0.5);
+        background: rgba(255, 91, 110, 0.08);
+      }
+
+      .storyItemKey {
+        flex-shrink: 0;
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .storyItemSummary {
+        flex: 1;
+        color: var(--text);
+      }
+
+      .storyItemMeta {
+        font-size: 10px;
+        color: var(--muted-2);
+        margin-top: 2px;
+      }
+
       ul {
         margin: 8px 0 0;
         padding: 0 0 0 18px;
@@ -1516,7 +1601,61 @@
         }
       ];
 
+      const STORAGE_KEY_STORIES = "graffiti20-stories";
+
+      /** @type {Array<{ issueKey: string, summary: string, status: string, ownerType: "platform"|"tenant", workstreamId: string, blocked: boolean }>} */
+      const defaultStories = [
+        { issueKey: "GRAFF-101", summary: "Backfill strategy for historical events", status: "In Progress", ownerType: "platform", workstreamId: "data-publisher", blocked: false },
+        { issueKey: "GRAFF-102", summary: "Alerting on publish lag > 10 min", status: "Not Started", ownerType: "platform", workstreamId: "data-publisher", blocked: false },
+        { issueKey: "GRAFF-103", summary: "End-to-end validation with Gallery dataset", status: "Done", ownerType: "platform", workstreamId: "data-publisher", blocked: false },
+        { issueKey: "GRAFF-104", summary: "Schema drift early-warning checks", status: "In Progress", ownerType: "platform", workstreamId: "data-publisher", blocked: false },
+        { issueKey: "GRAFF-201", summary: "SSO group mappings for least-privilege", status: "Blocked", ownerType: "platform", workstreamId: "ruleslab-onboarding", blocked: true },
+        { issueKey: "GRAFF-202", summary: "Onboarding checklist documentation", status: "In Progress", ownerType: "platform", workstreamId: "ruleslab-onboarding", blocked: false },
+        { issueKey: "GRAFF-203", summary: "UAT with 2 pilot teams", status: "Not Started", ownerType: "tenant", workstreamId: "ruleslab-onboarding", blocked: false },
+        { issueKey: "GRAFF-204", summary: "Role/permission mapping final pass", status: "In Progress", ownerType: "platform", workstreamId: "ruleslab-onboarding", blocked: false },
+        { issueKey: "GRAFF-301", summary: "Client-side fallback for partial metadata", status: "Done", ownerType: "platform", workstreamId: "gallery-integration", blocked: false },
+        { issueKey: "GRAFF-302", summary: "Load test with peak traffic profile", status: "Done", ownerType: "platform", workstreamId: "gallery-integration", blocked: false },
+        { issueKey: "GRAFF-303", summary: "Analytics event parity verification", status: "In Progress", ownerType: "tenant", workstreamId: "gallery-integration", blocked: false },
+        { issueKey: "GRAFF-401", summary: "Canonical card ID translation rules", status: "Blocked", ownerType: "platform", workstreamId: "grayhair-integration", blocked: true },
+        { issueKey: "GRAFF-402", summary: "Adapter service + contract tests", status: "Not Started", ownerType: "platform", workstreamId: "grayhair-integration", blocked: false },
+        { issueKey: "GRAFF-403", summary: "Shared staging environment setup", status: "Blocked", ownerType: "tenant", workstreamId: "grayhair-integration", blocked: true },
+      ];
+
       let workstreams = loadWorkstreams();
+
+      function loadStories() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY_STORIES);
+          if (!raw) return JSON.parse(JSON.stringify(defaultStories));
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(defaultStories));
+        } catch {
+          return JSON.parse(JSON.stringify(defaultStories));
+        }
+      }
+
+      function saveStories() {
+        try {
+          localStorage.setItem(STORAGE_KEY_STORIES, JSON.stringify(stories));
+        } catch (_) {}
+      }
+
+      let stories = loadStories();
+
+      function getStoryRollup(workstreamId) {
+        const wsStories = stories.filter((s) => s.workstreamId === workstreamId);
+        const platform = wsStories.filter((s) => s.ownerType === "platform").length;
+        const tenant = wsStories.filter((s) => s.ownerType === "tenant").length;
+        const notStarted = wsStories.filter((s) => s.status === "Not Started").length;
+        const inProgress = wsStories.filter((s) => s.status === "In Progress").length;
+        const blocked = wsStories.filter((s) => s.status === "Blocked" || s.blocked).length;
+        const done = wsStories.filter((s) => s.status === "Done").length;
+        return { platform, tenant, total: wsStories.length, notStarted, inProgress, blocked, done };
+      }
+
+      function getStoriesByWorkstream(workstreamId, ownerType) {
+        return stories.filter((s) => s.workstreamId === workstreamId && s.ownerType === ownerType);
+      }
 
       function clamp(n, min, max) {
         return Math.max(min, Math.min(max, n));
@@ -1674,6 +1813,7 @@
 
         const hasRisk = Array.isArray(ws.risks) && ws.risks.length > 0;
         const hasDeps = Array.isArray(ws.dependencies) && ws.dependencies.length > 0;
+        const storyRollup = getStoryRollup(ws.id);
 
         el.innerHTML = `
           <div class="wsTop">
@@ -1742,11 +1882,53 @@
                 </div>
               </div>
             </div>
+
+            <div class="executionSection">
+              <div class="executionLabel">Stories</div>
+              <div class="executionGrid">
+                <div class="storyRollup platform">
+                  <div class="storyRollupLabel">Platform</div>
+                  <div class="storyRollupValue">${storyRollup.platform}</div>
+                </div>
+                <div class="storyRollup tenant">
+                  <div class="storyRollupLabel">Tenant</div>
+                  <div class="storyRollupValue">${storyRollup.tenant}</div>
+                </div>
+                <div class="storyRollup">
+                  <div class="storyRollupLabel">Total</div>
+                  <div class="storyRollupValue">${storyRollup.total}</div>
+                </div>
+                <div class="storyRollup">
+                  <div class="storyRollupLabel">Not started</div>
+                  <div class="storyRollupValue">${storyRollup.notStarted}</div>
+                </div>
+                <div class="storyRollup">
+                  <div class="storyRollupLabel">In progress</div>
+                  <div class="storyRollupValue">${storyRollup.inProgress}</div>
+                </div>
+                <div class="storyRollup blocked">
+                  <div class="storyRollupLabel">Blocked</div>
+                  <div class="storyRollupValue">${storyRollup.blocked}</div>
+                </div>
+                <div class="storyRollup">
+                  <div class="storyRollupLabel">Done</div>
+                  <div class="storyRollupValue">${storyRollup.done}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="wsExpand">
             <div class="wsExpandInner" id="${expandedId}">
               <div class="sectionGrid">
+                <div class="section">
+                  <h3>Platform Stories</h3>
+                  ${renderStoryList(getStoriesByWorkstream(ws.id, "platform"))}
+                </div>
+                <div class="section">
+                  <h3>Tenant Stories</h3>
+                  ${renderStoryList(getStoriesByWorkstream(ws.id, "tenant"))}
+                </div>
                 <div class="section">
                   <h3>Latest update</h3>
                   ${renderTextBlock(ws.latestUpdate, "No update provided.")}
@@ -1800,6 +1982,20 @@
       function renderList(items) {
         if (!items || items.length === 0) return `<ul><li><em>None</em></li></ul>`;
         return `<ul>${items.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`;
+      }
+
+      /** @param {typeof stories} list */
+      function renderStoryList(list) {
+        if (!list || list.length === 0) return `<ul class="storyList"><li class="storyItem"><span class="storyItemSummary"><em>No stories</em></span></li></ul>`;
+        return `<ul class="storyList">${list
+          .map(
+            (s) =>
+              `<li class="storyItem ${s.blocked || s.status === "Blocked" ? "storyItemBlocked" : ""}">
+                <span class="storyItemKey">${escapeHtml(s.issueKey)}</span>
+                <span class="storyItemSummary">${escapeHtml(s.summary)}<span class="storyItemMeta">${escapeHtml(s.status)}${s.blocked ? " · Blocked" : ""}</span></span>
+              </li>`
+          )
+          .join("")}</ul>`;
       }
 
       function escapeHtml(s) {
