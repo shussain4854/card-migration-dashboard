@@ -1023,6 +1023,10 @@
               Last refreshed:
               <span class="mono" id="lastRefreshed">—</span>
             </div>
+            <div class="subtitle">
+              Last updated by:
+              <span class="mono" id="lastUpdatedBy">—</span>
+            </div>
             <button class="btn" type="button" id="toggleFiltersBtn">Filters</button>
             <button class="btn" type="button" id="aiInsightsBtn">Insights</button>
             <button class="btn" type="button" id="notesBtn">Update From Notes</button>
@@ -1812,6 +1816,7 @@
       let pendingNotesUpdates = [];
       let paletteFiltered = [];
       let paletteSelectedIndex = 0;
+      let lastUpdatedByDisplay = "—";
 
       const COMMAND_PALETTE_COMMANDS = [
         { id: "open-filters", label: "Open Filters", shortcut: "f", keywords: "filters sidebar" },
@@ -2077,6 +2082,7 @@
           if (s.latestUpdate) ws.latestUpdate = s.latestUpdate;
           ws.lastUpdatedAt = now;
         }
+        lastUpdatedByDisplay = "Sikander Hussain";
         saveWorkstreams();
         pendingNotesUpdates = [];
         closeNotes();
@@ -2889,6 +2895,8 @@
 
         document.title = kpi.programName;
         document.getElementById("lastRefreshed").textContent = new Date().toLocaleString();
+        const lastUpdatedByEl = document.getElementById("lastUpdatedBy");
+        if (lastUpdatedByEl) lastUpdatedByEl.textContent = lastUpdatedByDisplay;
 
         const kpisEl = document.getElementById("kpis");
         kpisEl.innerHTML = "";
