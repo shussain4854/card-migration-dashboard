@@ -1189,6 +1189,10 @@
               <label for="editBy">Last updated by</label>
               <input id="editBy" name="by" type="text" autocomplete="name" placeholder="Your name or team" />
             </div>
+            <div class="field">
+              <label for="editOwner">Owner</label>
+              <input id="editOwner" name="owner" type="text" placeholder="Enter owner name" />
+            </div>
             <div style="height: 10px"></div>
             <div class="modalGrid">
               <div class="field">
@@ -1850,6 +1854,7 @@
         const remindersEl = document.getElementById("editReminders");
         const depsEl = document.getElementById("editDependencies");
         const byEl = document.getElementById("editBy");
+        const ownerEl = document.getElementById("editOwner");
 
         nameEl.textContent = `Edit – ${ws.name}`;
         statusEl.value = ws.status;
@@ -1862,6 +1867,7 @@
         remindersEl.value = (ws.reminders || []).join("\n");
         if (depsEl) depsEl.value = (ws.dependencies || []).join("\n");
         byEl.value = ws.lastUpdatedBy || "";
+        if (ownerEl) ownerEl.value = ws.owner || "";
 
         modal.hidden = false;
       }
@@ -1896,6 +1902,7 @@
         const remindersEl = document.getElementById("editReminders");
         const depsEl = document.getElementById("editDependencies");
         const byEl = document.getElementById("editBy");
+        const ownerEl = document.getElementById("editOwner");
 
         ws.status = /** @type {StatusColor} */ (statusEl.value || "green");
         const pi = Number(piEl.value);
@@ -1908,6 +1915,7 @@
         ws.reminders = splitLines(remindersEl.value);
         ws.dependencies = depsEl ? splitLines(depsEl.value) : (ws.dependencies || []);
         ws.lastUpdatedBy = byEl.value.trim() || null;
+        ws.owner = ownerEl && ownerEl.value.trim() ? ownerEl.value.trim() : null;
         ws.lastUpdatedAt = new Date().toISOString();
 
         saveWorkstreams();
