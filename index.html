@@ -1,0 +1,2995 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Card Migration – Graffiti 2.0</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel-2: rgba(255, 255, 255, 0.09);
+        --border: rgba(255, 255, 255, 0.14);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.72);
+        --muted-2: rgba(255, 255, 255, 0.62);
+        --shadow: 0 16px 50px rgba(0, 0, 0, 0.42);
+
+        --green: #2bd576;
+        --yellow: #ffcc48;
+        --red: #ff5b6e;
+
+        --radius: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          "Apple Color Emoji",
+          "Segoe UI Emoji";
+        color: var(--text);
+        background:
+          radial-gradient(900px 700px at 12% 10%, rgba(44, 120, 255, 0.22), transparent 60%),
+          radial-gradient(900px 700px at 88% 20%, rgba(43, 213, 118, 0.16), transparent 55%),
+          radial-gradient(900px 700px at 55% 90%, rgba(255, 204, 72, 0.12), transparent 55%),
+          linear-gradient(180deg, #091022 0%, #070b16 100%);
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 20px 16px 32px;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: grid;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        background: rgba(9, 16, 34, 0.88);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .titleRow {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: 0.2px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .kpis {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .kpiCard {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 9px 11px 8px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(10px);
+        min-width: 128px;
+        flex: 1 1 128px;
+      }
+
+      .kpiCardFilter {
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+      }
+
+      .kpiCardFilter:hover {
+        border-color: rgba(44, 120, 255, 0.5);
+        background: rgba(44, 120, 255, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .kpiCardActive {
+        border-color: rgba(44, 120, 255, 0.9);
+        box-shadow: 0 0 0 1px rgba(44, 120, 255, 0.8), var(--shadow);
+        background: rgba(44, 120, 255, 0.18);
+      }
+
+      .kpiLabel {
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 0.24px;
+        text-transform: uppercase;
+      }
+
+      .kpiValue {
+        margin-top: 4px;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .kpiHint {
+        margin-top: 3px;
+        color: var(--muted-2);
+        font-size: 11px;
+      }
+
+      .kpis.summary {
+        margin-top: -2px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .wsCard {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(10px);
+      }
+
+      .wsCard.wsCardHighRisk {
+        border-left: 3px solid rgba(255, 180, 72, 0.65);
+        background: linear-gradient(to right, rgba(255, 180, 72, 0.04), var(--panel) 12px);
+      }
+
+      .riskScore {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .riskScore.high {
+        color: rgba(255, 180, 72, 0.95);
+      }
+
+      .wsTop {
+        padding: 12px 12px 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .wsHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .wsName {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .wsName h2 {
+        margin: 0;
+        font-size: 15px;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .statusPill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.14);
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--muted-2);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+      }
+
+      .dot.green {
+        background: var(--green);
+        box-shadow: 0 0 0 3px rgba(43, 213, 118, 0.18);
+      }
+
+      .dot.yellow {
+        background: var(--yellow);
+        box-shadow: 0 0 0 3px rgba(255, 204, 72, 0.18);
+      }
+
+      .dot.red {
+        background: var(--red);
+        box-shadow: 0 0 0 3px rgba(255, 91, 110, 0.18);
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+        padding: 6px 9px;
+        border-radius: 10px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease;
+      }
+
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .metaGrid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .meta {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 8px 9px 7px;
+      }
+
+      .metaLabel {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.24px;
+        text-transform: uppercase;
+      }
+
+      .metaValue {
+        margin-top: 4px;
+        font-size: 12px;
+        font-weight: 650;
+        color: var(--text);
+      }
+
+      .progressRow {
+        display: grid;
+        gap: 6px;
+      }
+
+      .progressTop {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+
+      .progressLabel {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .progressPct {
+        font-size: 11px;
+        color: var(--text);
+        font-weight: 650;
+      }
+
+      .bar {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+      }
+
+      .bar > div {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(44, 120, 255, 0.9), rgba(43, 213, 118, 0.85));
+        width: 0%;
+        transition: width 400ms ease;
+      }
+
+      .latest {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .wsExpand {
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .wsExpandInner {
+        display: none;
+        padding: 10px 12px 12px;
+      }
+
+      .wsCard[data-expanded="true"] .wsExpandInner {
+        display: block;
+      }
+
+      .sectionGrid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      @media (max-width: 860px) {
+        .sectionGrid {
+          grid-template-columns: 1fr;
+        }
+
+        .metaGrid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .section {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 9px 9px 8px;
+      }
+
+      .section h3 {
+        margin: 0;
+        font-size: 11px;
+        letter-spacing: 0.26px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      ul {
+        margin: 8px 0 0;
+        padding: 0 0 0 18px;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .footerNote {
+        margin-top: 18px;
+        color: var(--muted-2);
+        font-size: 12px;
+      }
+
+      .mono {
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          "Liberation Mono",
+          "Courier New",
+          monospace;
+      }
+
+      .wsActions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .metaUpdate {
+        margin-top: 6px;
+        font-size: 11px;
+        color: var(--muted-2);
+      }
+
+      .filterGroup {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .filterBtn {
+        padding-inline: 10px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+        opacity: 0.78;
+      }
+
+      .filterBtnActive {
+        border-color: rgba(44, 120, 255, 0.9);
+        background: rgba(44, 120, 255, 0.22);
+        opacity: 1;
+      }
+
+      .toolbarRight {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: stretch;
+      }
+
+      .sortBox {
+        min-width: 100%;
+      }
+
+      .sortSelect {
+        width: 100%;
+        font-size: 12px;
+      }
+
+      .searchBox {
+        min-width: 100%;
+        max-width: none;
+        flex: 1 1 100%;
+      }
+
+      .searchInput {
+        width: 100%;
+      }
+
+      .sidebarBackdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 6, 23, 0.46);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+        z-index: 35;
+      }
+
+      .sidebarBackdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .filterSidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: min(340px, calc(100vw - 28px));
+        background: rgba(10, 16, 31, 0.94);
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: -18px 0 40px rgba(0, 0, 0, 0.34);
+        backdrop-filter: blur(16px);
+        transform: translateX(100%);
+        transition: transform 0.2s ease;
+        z-index: 36;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .filterSidebar.open {
+        transform: translateX(0);
+      }
+
+      .insightsSidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: min(460px, calc(100vw - 24px));
+        background: rgba(10, 16, 31, 0.96);
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: -18px 0 40px rgba(0, 0, 0, 0.34);
+        backdrop-filter: blur(16px);
+        transform: translateX(100%);
+        transition: transform 0.2s ease;
+        z-index: 36;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .insightsSidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebarHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 14px 14px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .sidebarTitle {
+        margin: 0;
+        font-size: 13px;
+        letter-spacing: 0.18px;
+      }
+
+      .sidebarBody {
+        padding: 12px 14px 16px;
+        overflow: auto;
+        display: grid;
+        gap: 14px;
+      }
+
+      .sidebarSection {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sidebarLabel {
+        font-size: 10px;
+        letter-spacing: 0.22px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .sidebarActiveFilter {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .sidebarActiveFilter span {
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .controlTower {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 0;
+      }
+
+      .drawer {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .drawer summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        font-size: 12px;
+        color: var(--text);
+        user-select: none;
+      }
+
+      .drawer summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .drawerMeta {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .drawerBody {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 10px 12px 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .drawerText {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+
+      .drawerRow {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .compactText {
+        font-size: 11px;
+        color: var(--muted-2);
+      }
+
+      .detailText {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+      }
+
+      .insightLayout {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .insightTools {
+        display: grid;
+        gap: 8px;
+        align-content: start;
+      }
+
+      .insightBtn {
+        justify-content: flex-start;
+        text-align: left;
+        padding: 10px 12px;
+      }
+
+      .insightBtnActive {
+        border-color: rgba(44, 120, 255, 0.9);
+        background: rgba(44, 120, 255, 0.22);
+      }
+
+      .insightOutput {
+        display: grid;
+        gap: 8px;
+      }
+
+      .insightOutput textarea {
+        min-height: 280px;
+      }
+
+      @media (max-width: 860px) {
+        .insightLayout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .insightsSidebar {
+          width: min(100vw, calc(100vw - 8px));
+        }
+      }
+
+      .riskBadge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 91, 110, 0.7);
+        background: rgba(255, 91, 110, 0.08);
+        color: rgba(255, 200, 205, 0.9);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+      }
+
+      .depBadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(44, 120, 255, 0.6);
+        background: rgba(44, 120, 255, 0.1);
+        color: rgba(180, 210, 255, 0.95);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+      }
+
+      .depBadge::before {
+        content: "⌗";
+        font-size: 11px;
+        opacity: 0.9;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 6px;
+        margin-bottom: 4px;
+      }
+
+      .filterGroup {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .filterBtn {
+        padding-inline: 10px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+        opacity: 0.78;
+      }
+
+      .filterBtnActive {
+        border-color: rgba(44, 120, 255, 0.9);
+        background: rgba(44, 120, 255, 0.22);
+        opacity: 1;
+      }
+
+      .searchBox {
+        min-width: 180px;
+        max-width: 260px;
+        flex: 1 1 180px;
+      }
+
+      .searchInput {
+        width: 100%;
+      }
+
+      .modalBackdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 6, 23, 0.72);
+        backdrop-filter: blur(14px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 40;
+      }
+
+      .modalBackdrop[hidden] {
+        display: none !important;
+      }
+
+      .modal {
+        width: min(640px, 100% - 32px);
+        max-height: min(85vh, 700px);
+        background: var(--panel-2);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 20px 55px rgba(0, 0, 0, 0.65);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .modalHeader {
+        padding: 14px 18px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .modalHeader h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .modalBody {
+        padding: 12px 18px 6px;
+        overflow: auto;
+        flex: 1 1 auto;
+      }
+
+      .modalGrid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 14px;
+      }
+
+      @media (max-width: 720px) {
+        .modalGrid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .field small {
+        font-size: 11px;
+        color: var(--muted-2);
+      }
+
+      .fieldRow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        background: rgba(7, 11, 22, 0.85);
+        border-radius: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: var(--text);
+        padding: 7px 9px;
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+        min-width: 0;
+      }
+
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      select:focus,
+      textarea:focus {
+        border-color: rgba(44, 120, 255, 0.9);
+        box-shadow: 0 0 0 1px rgba(44, 120, 255, 0.6);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 56px;
+        max-height: 160px;
+      }
+
+      .modalFooter {
+        padding: 10px 18px 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(
+          to top,
+          rgba(9, 16, 34, 0.98),
+          rgba(9, 16, 34, 0.92),
+          rgba(9, 16, 34, 0.88)
+        );
+      }
+
+      .modalFooterNote {
+        font-size: 11px;
+        color: var(--muted-2);
+      }
+
+      .btnSecondary {
+        background: transparent;
+      }
+
+      .btnPrimary {
+        background: linear-gradient(90deg, rgba(44, 120, 255, 0.9), rgba(43, 213, 118, 0.9));
+        border-color: transparent;
+      }
+
+      .btnPrimary:hover {
+        filter: brightness(1.05);
+      }
+
+      .checkboxRow {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .checkboxRow input {
+        width: 14px;
+        height: 14px;
+      }
+
+      .commandPaletteBackdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 6, 23, 0.6);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 12vh 16px 0;
+        z-index: 50;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+
+      .commandPaletteBackdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .commandPalette {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(12, 18, 32, 0.96);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+      }
+
+      .commandPaletteInput {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 14px;
+        color: var(--text);
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        outline: none;
+      }
+
+      .commandPaletteInput::placeholder {
+        color: var(--muted-2);
+      }
+
+      .commandPaletteList {
+        max-height: 280px;
+        overflow-y: auto;
+        padding: 6px 0;
+      }
+
+      .commandPaletteItem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 14px;
+        font-size: 13px;
+        color: var(--text);
+        cursor: pointer;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+      }
+
+      .commandPaletteItem:hover,
+      .commandPaletteItem.selected {
+        background: rgba(44, 120, 255, 0.12);
+      }
+
+      .commandPaletteItem .shortcut {
+        font-size: 11px;
+        color: var(--muted-2);
+        font-family: ui-monospace, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="titleRow">
+          <div>
+            <h1>Card Migration – Graffiti 2.0</h1>
+            <div class="subtitle">Single-page dashboard (local-only, no frameworks)</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end">
+            <div class="subtitle">
+              Last refreshed:
+              <span class="mono" id="lastRefreshed">—</span>
+            </div>
+            <button class="btn" type="button" id="toggleFiltersBtn">Filters</button>
+            <button class="btn" type="button" id="aiInsightsBtn">Insights</button>
+            <button class="btn" type="button" id="notesBtn">Update From Notes</button>
+            <button class="btn" type="button" id="statusUpdateBtn">Generate Status Update</button>
+          </div>
+        </div>
+
+        <div class="kpis" id="kpis"></div>
+        <div class="kpis summary" id="summaryKpis"></div>
+      </header>
+
+      <main class="grid" id="cards" aria-label="Workstreams"></main>
+
+      <div class="footerNote">
+        Tip: All data is sample data stored in <span class="mono">index.html</span>. Open the file in any browser to run locally.
+      </div>
+    </div>
+
+    <div class="sidebarBackdrop" id="sidebarBackdrop"></div>
+    <aside class="filterSidebar" id="filterSidebar" aria-label="Filters">
+      <div class="sidebarHeader">
+        <h2 class="sidebarTitle">Filters</h2>
+        <button class="btn btnSecondary" type="button" id="closeFiltersBtn">Close</button>
+      </div>
+      <div class="sidebarBody">
+        <div class="sidebarSection">
+          <div class="sidebarLabel">Active filter</div>
+          <div class="sidebarActiveFilter">
+            <div>
+              <span id="activeFilterText">All workstreams</span>
+            </div>
+            <button class="btn btnSecondary" type="button" id="clearFilterBtn">Clear filter</button>
+          </div>
+        </div>
+
+        <div class="sidebarSection">
+          <div class="sidebarLabel">Filter workstreams</div>
+          <div class="filterGroup" id="filterGroup">
+            <button class="btn filterBtn filterBtnActive" type="button" data-filter="all">All</button>
+            <button class="btn filterBtn" type="button" data-filter="on-track">On Track</button>
+            <button class="btn filterBtn" type="button" data-filter="at-risk">At Risk</button>
+            <button class="btn filterBtn" type="button" data-filter="off-track">Off Track</button>
+            <button class="btn filterBtn" type="button" data-filter="qa-ready">QA Ready</button>
+            <button class="btn filterBtn" type="button" data-filter="prod-ready">Production Ready</button>
+          </div>
+        </div>
+
+        <div class="sidebarSection">
+          <div class="sidebarLabel">Sort and search</div>
+          <div class="toolbarRight">
+            <div class="sortBox">
+              <select id="sortSelect" class="sortSelect" aria-label="Sort workstreams">
+                <option value="name">Sort by: Name</option>
+                <option value="status">Sort by: Status</option>
+                <option value="pi-desc">Sort by: PI Progress (high → low)</option>
+                <option value="risk-desc">Sort by: Risk (high → low)</option>
+              </select>
+            </div>
+            <div class="searchBox">
+              <input
+                id="searchInput"
+                class="searchInput"
+                type="text"
+                placeholder="Search workstreams…"
+                aria-label="Search workstreams"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="insightsSidebar" id="insightsSidebar" aria-label="Insights">
+      <div class="sidebarHeader">
+        <h2 class="sidebarTitle">Insights</h2>
+        <button class="btn btnSecondary" type="button" id="closeInsightsBtn">Close</button>
+      </div>
+      <div class="sidebarBody">
+        <section class="controlTower" aria-label="Insights sections">
+          <details class="drawer" id="projectionDrawer">
+            <summary>
+              <span>Projected Completion</span>
+              <span class="drawerMeta" id="projectionDrawerMeta">Click to open</span>
+            </summary>
+            <div class="drawerBody">
+              <p class="drawerText" id="projectionDrawerText"></p>
+            </div>
+          </details>
+
+          <details class="drawer" id="aiDrawer">
+            <summary>
+              <span>AI Insights</span>
+              <span class="drawerMeta">Rule-based PM guidance</span>
+            </summary>
+            <div class="drawerBody">
+              <div class="insightLayout">
+                <div class="insightTools" id="aiDrawerButtons">
+                  <button class="btn insightBtn insightBtnActive" type="button" data-drawer-insight="summary">AI Summary</button>
+                  <button class="btn insightBtn" type="button" data-drawer-insight="risk">Risk Summary</button>
+                  <button class="btn insightBtn" type="button" data-drawer-insight="leadership">Leadership Update</button>
+                  <button class="btn insightBtn" type="button" data-drawer-insight="actions">Suggested Next Actions</button>
+                  <button class="btn insightBtn" type="button" data-drawer-insight="questions">Questions to Ask</button>
+                </div>
+                <div class="insightOutput">
+                  <div class="field">
+                    <label for="aiDrawerOutputText">Generated insight</label>
+                    <textarea id="aiDrawerOutputText" readonly rows="10"></textarea>
+                  </div>
+                  <div class="drawerRow">
+                    <div class="compactText">Generated from the current workstream data and reminder/risk signals.</div>
+                    <button class="btn btnPrimary" type="button" id="aiDrawerCopyBtn">Copy to clipboard</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="drawer" id="riskDrawer">
+            <summary>
+              <span>Risk Summary</span>
+              <span class="drawerMeta">Escalation and risk posture</span>
+            </summary>
+            <div class="drawerBody">
+              <p class="drawerText" id="riskDrawerText"></p>
+            </div>
+          </details>
+
+          <details class="drawer" id="leadershipDrawer">
+            <summary>
+              <span>Leadership Summary</span>
+              <span class="drawerMeta">Executive-ready narrative</span>
+            </summary>
+            <div class="drawerBody">
+              <p class="drawerText" id="leadershipDrawerText"></p>
+            </div>
+          </details>
+
+          <details class="drawer" id="timelineDrawer">
+            <summary>
+              <span>Timeline / Forecast</span>
+              <span class="drawerMeta">PI-level projection</span>
+            </summary>
+            <div class="drawerBody">
+              <p class="drawerText" id="timelineDrawerText"></p>
+            </div>
+          </details>
+        </section>
+      </div>
+    </aside>
+
+    <div class="modalBackdrop" id="editModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+        <div class="modalHeader">
+          <h2 id="editModalTitle">Edit workstream</h2>
+          <button class="btn btnSecondary" type="button" id="editCancelTop">Close</button>
+        </div>
+        <form id="editForm">
+          <div class="modalBody">
+            <div class="field">
+              <label for="editBy">Last updated by</label>
+              <input id="editBy" name="by" type="text" autocomplete="name" placeholder="Your name or team" />
+            </div>
+            <div style="height: 10px"></div>
+            <div class="modalGrid">
+              <div class="field">
+                <label for="editStatus">Status</label>
+                <select id="editStatus" name="status">
+                  <option value="green">On Track (green)</option>
+                  <option value="yellow">At Risk (yellow)</option>
+                  <option value="red">Off Track (red)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="editPi">PI progress %</label>
+                <input id="editPi" name="pi" type="number" min="0" max="100" step="1" />
+              </div>
+              <div class="field" style="grid-column: 1 / -1">
+                <label for="editLatest">Latest update</label>
+                <textarea id="editLatest" name="latest"></textarea>
+              </div>
+              <div class="field">
+                <label>Readiness</label>
+                <div class="fieldRow">
+                  <label class="checkboxRow">
+                    <input id="editQa" name="qa" type="checkbox" />
+                    <span>QA ready</span>
+                  </label>
+                  <label class="checkboxRow">
+                    <input id="editProd" name="prod" type="checkbox" />
+                    <span>Production ready</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div style="height: 12px"></div>
+
+            <div class="modalGrid">
+              <div class="field">
+                <label for="editTasks">Pending tasks</label>
+                <textarea
+                  id="editTasks"
+                  name="tasks"
+                  placeholder="One task per line"
+                ></textarea>
+                <small>Use one line per task.</small>
+              </div>
+              <div class="field">
+                <label for="editRisks">Risks</label>
+                <textarea
+                  id="editRisks"
+                  name="risks"
+                  placeholder="One risk per line"
+                ></textarea>
+                <small>Use one line per risk.</small>
+              </div>
+              <div class="field">
+                <label for="editDependencies">Dependencies</label>
+                <textarea
+                  id="editDependencies"
+                  name="dependencies"
+                  placeholder="One dependency per line"
+                ></textarea>
+                <small>Use one line per dependency.</small>
+              </div>
+              <div class="field">
+                <label for="editReminders">Reminders</label>
+                <textarea
+                  id="editReminders"
+                  name="reminders"
+                  placeholder="One reminder per line"
+                ></textarea>
+                <small>Use one line per reminder.</small>
+              </div>
+            </div>
+          </div>
+          <div class="modalFooter">
+            <div class="modalFooterNote">
+              Changes are saved in your browser only (localStorage).
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button class="btn btnSecondary" type="button" id="editCancelBottom">Cancel</button>
+              <button class="btn btnPrimary" type="submit">Save changes</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modalBackdrop" id="summaryModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="summaryModalTitle">
+        <div class="modalHeader">
+          <h2 id="summaryModalTitle">Program status update</h2>
+          <button class="btn btnSecondary" type="button" id="summaryCloseTop">Close</button>
+        </div>
+        <div class="modalBody">
+          <div class="field">
+            <label for="summaryText">Generated summary</label>
+            <textarea id="summaryText" readonly rows="10" style="min-height: 220px"></textarea>
+          </div>
+        </div>
+        <div class="modalFooter">
+          <div class="modalFooterNote">
+            You can paste this into email, chat, or status docs.
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button class="btn btnSecondary" type="button" id="summaryCloseBottom">Cancel</button>
+            <button class="btn btnPrimary" type="button" id="summaryCopyBtn">Copy to clipboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modalBackdrop" id="aiModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+        <div class="modalHeader">
+          <h2 id="aiModalTitle">AI Insights</h2>
+          <button class="btn btnSecondary" type="button" id="aiCloseTop">Close</button>
+        </div>
+        <div class="modalBody">
+          <div class="insightLayout">
+            <div class="insightTools" id="aiInsightButtons">
+              <button class="btn insightBtn insightBtnActive" type="button" data-insight="summary">AI Summary</button>
+              <button class="btn insightBtn" type="button" data-insight="risk">Risk Summary</button>
+              <button class="btn insightBtn" type="button" data-insight="leadership">Leadership Update</button>
+              <button class="btn insightBtn" type="button" data-insight="actions">Suggested Next Actions</button>
+              <button class="btn insightBtn" type="button" data-insight="questions">Questions to Ask</button>
+            </div>
+            <div class="insightOutput">
+              <div class="field">
+                <label for="aiOutputText">Generated insight</label>
+                <textarea id="aiOutputText" readonly rows="12"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modalFooter">
+          <div class="modalFooterNote">
+            Rule-based PM guidance generated from the current dashboard data.
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button class="btn btnSecondary" type="button" id="aiCloseBottom">Cancel</button>
+            <button class="btn btnPrimary" type="button" id="aiCopyBtn">Copy to clipboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modalBackdrop" id="notesModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="notesModalTitle">
+        <div class="modalHeader">
+          <h2 id="notesModalTitle">Update from meeting notes</h2>
+          <button class="btn btnSecondary" type="button" id="notesCloseTop">Close</button>
+        </div>
+        <div class="modalBody">
+          <div class="field">
+            <label for="notesInput">Meeting notes</label>
+            <textarea
+              id="notesInput"
+              rows="8"
+              placeholder="Paste raw meeting notes here. Mention workstream names (e.g., &quot;Data Publisher is blocked by schema changes&quot;)."
+            ></textarea>
+            <small>We'll scan for workstream names and suggest status, readiness, and latest update changes.</small>
+          </div>
+          <div style="height: 12px"></div>
+          <div class="field">
+            <label>Suggested updates</label>
+            <div
+              id="notesPreview"
+              style="border-radius: 8px; border: 1px solid var(--border-subtle); padding: 10px; background: rgba(7,11,22,0.85); font-size: 12px; max-height: 260px; overflow: auto;"
+            >
+              <div style="font-size:12px;color:var(--muted-2);">
+                Paste meeting notes above and click &quot;Generate suggestions&quot; to see proposed updates.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modalFooter">
+          <div class="modalFooterNote">
+            Nothing is saved until you review the suggestions and click <strong>Apply updates</strong>.
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button class="btn btnSecondary" type="button" id="notesCancelBottom">Cancel</button>
+            <button class="btn" type="button" id="notesGenerateBtn">Generate suggestions</button>
+            <button class="btn btnPrimary" type="button" id="notesApplyBtn" disabled>Apply updates</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="commandPaletteBackdrop" id="commandPaletteBackdrop" aria-hidden="true">
+      <div class="commandPalette" role="dialog" aria-label="Command palette">
+        <input
+          type="text"
+          class="commandPaletteInput"
+          id="commandPaletteInput"
+          placeholder="Search commands…"
+          aria-label="Search commands"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="commandPaletteList" id="commandPaletteList" role="listbox"></div>
+      </div>
+    </div>
+
+    <script>
+      const PROGRAM_NAME = "Card Migration – Graffiti 2.0";
+      const STORAGE_KEY = "graffiti20-workstreams";
+
+      /** @typedef {"green"|"yellow"|"red"} StatusColor */
+
+      /** @type {Array<{
+       *   id: string,
+       *   name: string,
+       *   status: StatusColor,
+       *   piProgressPct: number,
+       *   owner?: string,
+       *   latestUpdate: string,
+       *   qaReady: boolean,
+       *   productionReady: boolean,
+       *   pendingTasks: string[],
+       *   risks: string[],
+       *   reminders: string[],
+       *   dependencies?: string[],
+       *   notes?: string,
+       *   lastUpdatedBy?: string | null,
+       *   lastUpdatedAt?: string | null
+       * }>} */
+      const defaultWorkstreams = [
+        {
+          id: "data-publisher",
+          name: "Data Publisher",
+          status: "green",
+          piProgressPct: 78,
+          owner: "A. Rivera",
+          latestUpdate:
+            "Incremental loads stable in lower envs. Working through edge-case schema diffs for a handful of legacy card products.",
+          qaReady: true,
+          productionReady: false,
+          pendingTasks: [
+            "Finalize backfill strategy for historical events (last 90 days vs full).",
+            "Add alerting on publish lag > 10 minutes.",
+            "Run end-to-end validation with Gallery test dataset."
+          ],
+          risks: [
+            "Schema drift from upstream could break downstream consumers without early warning.",
+            "High-volume days may require tuning batch sizes and retry policy."
+          ],
+          reminders: ["Share weekly data quality metrics in PI readout.", "Keep runbook updated as thresholds change."],
+          dependencies: ["Upstream schema owners", "Gallery validation dataset"],
+          notes: "Good momentum overall; main focus is operational hardening before production readiness."
+        },
+        {
+          id: "ruleslab-onboarding",
+          name: "RulesLab Onboarding",
+          status: "yellow",
+          piProgressPct: 52,
+          owner: "M. Chen",
+          latestUpdate:
+            "Core onboarding flow is functional, but role/permission mapping needs a final pass with InfoSec and the RulesLab admins.",
+          qaReady: false,
+          productionReady: false,
+          pendingTasks: [
+            "Confirm SSO group mappings for least-privilege access.",
+            "Document onboarding checklist for new card programs.",
+            "Complete user acceptance testing with 2 pilot teams."
+          ],
+          risks: [
+            "Delays in access approvals could stall UAT.",
+            "Incorrect default permissions could trigger rework after audit review."
+          ],
+          reminders: [
+            "Schedule 30-min review with InfoSec on group policy.",
+            "Validate onboarding docs against real pilot steps."
+          ],
+          dependencies: ["InfoSec approval", "RulesLab admin access"],
+          notes: "Likely to move green quickly once access and permission mapping decisions are locked."
+        },
+        {
+          id: "gallery-integration",
+          name: "Gallery Integration",
+          status: "green",
+          piProgressPct: 85,
+          owner: "J. Patel",
+          latestUpdate:
+            "Gallery is consuming new card metadata and rendering correctly. Only remaining work is tightening error handling and performance checks.",
+          qaReady: true,
+          productionReady: true,
+          pendingTasks: [
+            "Add client-side fallback for partial metadata.",
+            "Load test with peak traffic profile.",
+            "Verify analytics event parity with existing cards."
+          ],
+          risks: ["Unexpected latency spikes during peak could impact UX if caching is misconfigured."],
+          reminders: ["Confirm production feature flag rollout plan.", "Capture final screenshots for release notes."],
+          dependencies: ["Feature flag rollout window", "Performance test environment"],
+          notes: "This is currently the cleanest candidate for leadership confidence and downstream rollout planning."
+        },
+        {
+          id: "grayhair-integration",
+          name: "Grayhair Integration",
+          status: "red",
+          piProgressPct: 34,
+          owner: "S. Walker",
+          latestUpdate:
+            "Blocking dependency: legacy API contract mismatches with the new card identifiers. Working a short-term adapter while long-term fix is scheduled.",
+          qaReady: false,
+          productionReady: false,
+          pendingTasks: [
+            "Align on canonical card ID translation rules.",
+            "Implement adapter service + contract tests.",
+            "Set up shared staging environment with partner team."
+          ],
+          risks: [
+            "Partner team timeline uncertainty could push integration beyond current PI.",
+            "Adapter may become de facto permanent if long-term fix slips."
+          ],
+          reminders: ["Escalate contract decision in next program sync.", "Track adapter scope to prevent uncontrolled growth."],
+          dependencies: ["Partner API contract decision", "Shared staging environment"],
+          notes: "This stream remains the largest schedule risk and should be managed as an escalation path."
+        }
+      ];
+
+      let workstreams = loadWorkstreams();
+
+      function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+      }
+
+      function formatPct(n) {
+        const v = clamp(Math.round(n), 0, 100);
+        return `${v}%`;
+      }
+
+      function statusLabel(color) {
+        if (color === "green") return "On Track";
+        if (color === "yellow") return "At Risk";
+        return "Off Track";
+      }
+
+      function readinessLabel(isReady) {
+        return isReady ? "Ready" : "Not Ready";
+      }
+
+      function formatLastUpdated(ws) {
+        if (!ws.lastUpdatedAt && !ws.lastUpdatedBy) return "Sample data";
+        const by = ws.lastUpdatedBy ? escapeHtml(ws.lastUpdatedBy) : "Unknown";
+        const t = ws.lastUpdatedAt ? escapeHtml(new Date(ws.lastUpdatedAt).toLocaleString()) : "Unknown time";
+        return `${by} at ${t}`;
+      }
+
+      function loadWorkstreams() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return JSON.parse(JSON.stringify(defaultWorkstreams));
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return JSON.parse(JSON.stringify(defaultWorkstreams));
+          const byId = new Map(parsed.map((w) => [w.id, w]));
+          return defaultWorkstreams.map((base) => {
+            const override = byId.get(base.id);
+            return override ? { ...base, ...override } : { ...base };
+          });
+        } catch {
+          return JSON.parse(JSON.stringify(defaultWorkstreams));
+        }
+      }
+
+      function saveWorkstreams() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(workstreams));
+        } catch {
+          // ignore storage errors in local-only view
+        }
+      }
+
+      function computeKpis(items) {
+        const avg = items.reduce((sum, w) => sum + clamp(w.piProgressPct, 0, 100), 0) / items.length;
+        const qaReadyCount = items.filter((w) => w.qaReady).length;
+        const prodReadyCount = items.filter((w) => w.productionReady).length;
+        return {
+          programName: PROGRAM_NAME,
+          piProgressAvgPct: Math.round(avg),
+          qaReadyCount,
+          prodReadyCount
+        };
+      }
+
+      function computeSummary(items) {
+        let onTrack = 0;
+        let atRisk = 0;
+        let offTrack = 0;
+        for (const w of items) {
+          if (w.status === "green") onTrack++;
+          else if (w.status === "yellow") atRisk++;
+          else if (w.status === "red") offTrack++;
+        }
+        return { onTrack, atRisk, offTrack };
+      }
+
+      function computeProgramHealth(kpi, summary) {
+        const hasRed = summary.offTrack > 0;
+        const hasYellow = summary.atRisk > 0;
+        const avg = kpi.piProgressAvgPct;
+
+        if (hasRed) {
+          return {
+            label: "Red",
+            reason: `${summary.offTrack} off-track workstream${summary.offTrack > 1 ? "s" : ""} dragging overall health.`
+          };
+        }
+
+        if (avg >= 65 && !hasYellow) {
+          return {
+            label: "Green",
+            reason: "All workstreams are non-red and PI progress is at or above 65%."
+          };
+        }
+
+        // yellow: at least one yellow or progress slightly behind target
+        if (hasYellow && avg >= 65) {
+          return {
+            label: "Yellow",
+            reason: "Overall progress is healthy but at least one workstream is at risk (yellow)."
+          };
+        }
+
+        if (avg >= 50) {
+          return {
+            label: "Yellow",
+            reason: "Average PI progress is slightly behind the 65% target; monitor execution closely."
+          };
+        }
+
+        return {
+          label: "Red",
+          reason: "Average PI progress is significantly below target and requires corrective action."
+        };
+      }
+
+      function kpiCard(label, value, hint) {
+        const el = document.createElement("div");
+        el.className = "kpiCard";
+        el.innerHTML = `
+          <div class="kpiLabel">${label}</div>
+          <div class="kpiValue">${value}</div>
+          <div class="kpiHint">${hint}</div>
+        `;
+        return el;
+      }
+
+      function renderTextBlock(text, fallback = "No detail captured.") {
+        return `<div class="detailText">${escapeHtml(text || fallback)}</div>`;
+      }
+
+      /** @param {typeof workstreams[0]} ws */
+      function computeRiskScore(ws) {
+        let score = 0;
+        const statusScore = { red: 4, yellow: 2, green: 0 };
+        score += statusScore[ws.status] ?? 0;
+        const depCount = Array.isArray(ws.dependencies) ? ws.dependencies.length : 0;
+        score += Math.min(2, depCount * 0.8);
+        if (!ws.qaReady) score += 1.5;
+        if (!ws.productionReady) score += 0.5;
+        const pi = clamp(ws.piProgressPct ?? 0, 0, 100);
+        score += ((100 - pi) / 100) * 2.5;
+        return clamp(Math.round(score * 10) / 10, 0, 10);
+      }
+
+      function wsCard(ws) {
+        const expandedId = `${ws.id}-expanded`;
+        const riskScore = computeRiskScore(ws);
+        const isHighRisk = riskScore >= 7;
+
+        const el = document.createElement("section");
+        el.className = "wsCard" + (isHighRisk ? " wsCardHighRisk" : "");
+        el.setAttribute("data-expanded", "false");
+        el.setAttribute("aria-label", ws.name);
+        if (isHighRisk) el.setAttribute("data-high-risk", "true");
+
+        const hasRisk = Array.isArray(ws.risks) && ws.risks.length > 0;
+        const hasDeps = Array.isArray(ws.dependencies) && ws.dependencies.length > 0;
+
+        el.innerHTML = `
+          <div class="wsTop">
+            <div class="wsHeader">
+              <div class="wsName">
+                <span class="dot ${ws.status}" aria-hidden="true"></span>
+                <h2 title="${ws.name}">${ws.name}</h2>
+                <span class="statusPill">
+                  <span class="dot ${ws.status}" aria-hidden="true" style="width:8px;height:8px"></span>
+                  <span>Status: <strong>${statusLabel(ws.status)}</strong></span>
+                </span>
+                ${
+                  hasRisk
+                    ? '<span class="riskBadge" title="One or more risks are tracked on this workstream.">Risk</span>'
+                    : ""
+                }
+                ${
+                  hasDeps
+                    ? '<span class="depBadge" title="This workstream has one or more dependencies.">Deps</span>'
+                    : ""
+                }
+              </div>
+              <div class="wsActions">
+                <button class="btn" type="button" data-action="edit" data-id="${ws.id}">
+                  Edit
+                </button>
+                <button class="btn" type="button" data-action="toggle" aria-expanded="false" aria-controls="${expandedId}">
+                  Expand
+                </button>
+              </div>
+            </div>
+
+            <div class="progressRow" aria-label="PI Progress">
+              <div class="progressTop">
+                <div class="progressLabel">PI progress</div>
+                <div class="progressPct">${formatPct(ws.piProgressPct)}</div>
+              </div>
+              <div class="bar" role="img" aria-label="PI progress bar">
+                <div style="width: ${clamp(ws.piProgressPct, 0, 100)}%"></div>
+              </div>
+            </div>
+
+            <div class="metaGrid">
+              <div class="meta">
+                <div class="metaLabel">Readiness</div>
+                <div class="metaValue">
+                  QA: <strong>${readinessLabel(ws.qaReady)}</strong>
+                  <span style="opacity:.55">•</span>
+                  Prod: <strong>${readinessLabel(ws.productionReady)}</strong>
+                </div>
+              </div>
+              <div class="meta">
+                <div class="metaLabel">Risk score</div>
+                <div class="metaValue">
+                  <span class="riskScore ${isHighRisk ? "high" : ""}" title="0–10 scale from status, dependencies, readiness, PI progress">${riskScore}/10</span>
+                </div>
+              </div>
+              <div class="meta">
+                <div class="metaLabel">Owner</div>
+                <div class="metaValue">${escapeHtml(ws.owner || "Unassigned")}</div>
+              </div>
+              <div class="meta">
+                <div class="metaLabel">Last updated</div>
+                <div class="metaUpdate">
+                  ${formatLastUpdated(ws)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wsExpand">
+            <div class="wsExpandInner" id="${expandedId}">
+              <div class="sectionGrid">
+                <div class="section">
+                  <h3>Latest update</h3>
+                  ${renderTextBlock(ws.latestUpdate, "No update provided.")}
+                </div>
+                <div class="section">
+                  <h3>Pending tasks</h3>
+                  ${renderList(ws.pendingTasks)}
+                </div>
+                <div class="section">
+                  <h3>Risks</h3>
+                  ${renderList(ws.risks)}
+                </div>
+                <div class="section">
+                  <h3>Reminders</h3>
+                  ${renderList(ws.reminders)}
+                </div>
+                <div class="section">
+                  <h3>Dependencies</h3>
+                  ${renderList(ws.dependencies || [])}
+                </div>
+                <div class="section">
+                  <h3>Notes</h3>
+                  ${renderTextBlock(ws.notes, "No notes captured.")}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const toggleBtn = el.querySelector('button[data-action="toggle"]');
+        const expandInner = el.querySelector(`#${CSS.escape(expandedId)}`);
+        const editBtn = el.querySelector('button[data-action="edit"]');
+
+        toggleBtn.addEventListener("click", () => {
+          const isExpanded = el.getAttribute("data-expanded") === "true";
+          el.setAttribute("data-expanded", String(!isExpanded));
+          toggleBtn.setAttribute("aria-expanded", String(!isExpanded));
+          toggleBtn.textContent = !isExpanded ? "Collapse" : "Expand";
+          if (!isExpanded) {
+            expandInner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        });
+
+        editBtn.addEventListener("click", () => {
+          openEdit(ws.id);
+        });
+
+        return el;
+      }
+
+      function renderList(items) {
+        if (!items || items.length === 0) return `<ul><li><em>None</em></li></ul>`;
+        return `<ul>${items.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`;
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      let editingId = null;
+      let activeFilter = "all";
+      let searchQuery = "";
+      let sortMode = "name";
+      let activeInsight = "summary";
+      let filtersOpen = false;
+      let insightsOpen = false;
+      /** @type {Array<{id:string,name:string,status:StatusColor|null,qaReady:boolean|null,productionReady:boolean|null,latestUpdate:string|null}>} */
+      let pendingNotesUpdates = [];
+      let paletteFiltered = [];
+      let paletteSelectedIndex = 0;
+
+      const COMMAND_PALETTE_COMMANDS = [
+        { id: "open-filters", label: "Open Filters", shortcut: "f", keywords: "filters sidebar" },
+        { id: "open-insights", label: "Open Insights", shortcut: "i", keywords: "insights drawer" },
+        { id: "open-notes", label: "Update From Notes", shortcut: "u", keywords: "meeting notes" },
+        { id: "open-status", label: "Generate Status Update", shortcut: "g", keywords: "status update summary" },
+        { id: "filter-on-track", label: "Filter On Track", shortcut: "", keywords: "on track green" },
+        { id: "filter-at-risk", label: "Filter At Risk", shortcut: "", keywords: "at risk yellow" },
+        { id: "filter-off-track", label: "Filter Off Track", shortcut: "", keywords: "off track red" },
+        { id: "filter-qa-ready", label: "Filter QA Ready", shortcut: "", keywords: "qa ready" },
+        { id: "filter-prod-ready", label: "Filter Production Ready", shortcut: "", keywords: "production prod ready" },
+        { id: "sort-name", label: "Sort by Name", shortcut: "", keywords: "sort name" },
+        { id: "sort-pi", label: "Sort by PI Progress", shortcut: "", keywords: "sort pi progress" },
+        { id: "sort-risk", label: "Sort by Risk", shortcut: "", keywords: "sort risk" }
+      ];
+
+      function openEdit(id) {
+        const ws = workstreams.find((w) => w.id === id);
+        if (!ws) return;
+        editingId = id;
+
+        const modal = document.getElementById("editModal");
+        const nameEl = document.getElementById("editModalTitle");
+        const statusEl = document.getElementById("editStatus");
+        const piEl = document.getElementById("editPi");
+        const latestEl = document.getElementById("editLatest");
+        const qaEl = document.getElementById("editQa");
+        const prodEl = document.getElementById("editProd");
+        const tasksEl = document.getElementById("editTasks");
+        const risksEl = document.getElementById("editRisks");
+        const remindersEl = document.getElementById("editReminders");
+        const depsEl = document.getElementById("editDependencies");
+        const byEl = document.getElementById("editBy");
+
+        nameEl.textContent = `Edit – ${ws.name}`;
+        statusEl.value = ws.status;
+        piEl.value = clamp(ws.piProgressPct, 0, 100);
+        latestEl.value = ws.latestUpdate || "";
+        qaEl.checked = !!ws.qaReady;
+        prodEl.checked = !!ws.productionReady;
+        tasksEl.value = (ws.pendingTasks || []).join("\n");
+        risksEl.value = (ws.risks || []).join("\n");
+        remindersEl.value = (ws.reminders || []).join("\n");
+        if (depsEl) depsEl.value = (ws.dependencies || []).join("\n");
+        byEl.value = ws.lastUpdatedBy || "";
+
+        modal.hidden = false;
+      }
+
+      function closeEdit() {
+        const modal = document.getElementById("editModal");
+        modal.hidden = true;
+        editingId = null;
+      }
+
+      function splitLines(value) {
+        return value
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      const editForm = document.getElementById("editForm");
+      editForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!editingId) return;
+        const ws = workstreams.find((w) => w.id === editingId);
+        if (!ws) return;
+
+        const statusEl = document.getElementById("editStatus");
+        const piEl = document.getElementById("editPi");
+        const latestEl = document.getElementById("editLatest");
+        const qaEl = document.getElementById("editQa");
+        const prodEl = document.getElementById("editProd");
+        const tasksEl = document.getElementById("editTasks");
+        const risksEl = document.getElementById("editRisks");
+        const remindersEl = document.getElementById("editReminders");
+        const depsEl = document.getElementById("editDependencies");
+        const byEl = document.getElementById("editBy");
+
+        ws.status = /** @type {StatusColor} */ (statusEl.value || "green");
+        const pi = Number(piEl.value);
+        ws.piProgressPct = Number.isFinite(pi) ? clamp(pi, 0, 100) : ws.piProgressPct;
+        ws.latestUpdate = latestEl.value.trim();
+        ws.qaReady = qaEl.checked;
+        ws.productionReady = prodEl.checked;
+        ws.pendingTasks = splitLines(tasksEl.value);
+        ws.risks = splitLines(risksEl.value);
+        ws.reminders = splitLines(remindersEl.value);
+        ws.dependencies = depsEl ? splitLines(depsEl.value) : (ws.dependencies || []);
+        ws.lastUpdatedBy = byEl.value.trim() || null;
+        ws.lastUpdatedAt = new Date().toISOString();
+
+        saveWorkstreams();
+        closeEdit();
+        render();
+      });
+
+      document.getElementById("editCancelTop").addEventListener("click", closeEdit);
+      document.getElementById("editCancelBottom").addEventListener("click", closeEdit);
+
+      const editBackdrop = document.getElementById("editModal");
+      editBackdrop.addEventListener("click", (event) => {
+        if (event.target === editBackdrop) {
+          closeEdit();
+        }
+      });
+
+      function openNotes() {
+        const modal = document.getElementById("notesModal");
+        const input = document.getElementById("notesInput");
+        const preview = document.getElementById("notesPreview");
+        const applyBtn = document.getElementById("notesApplyBtn");
+        if (!modal || !input || !preview || !applyBtn) return;
+        input.value = "";
+        preview.innerHTML =
+          '<div style="font-size:12px;color:var(--muted-2);">Paste meeting notes above and click "Generate suggestions" to see proposed updates.</div>';
+        applyBtn.disabled = true;
+        pendingNotesUpdates = [];
+        modal.hidden = false;
+      }
+
+      function closeNotes() {
+        const modal = document.getElementById("notesModal");
+        if (!modal) return;
+        modal.hidden = true;
+        pendingNotesUpdates = [];
+      }
+
+      function inferStatus(text) {
+        const t = text.toLowerCase();
+        if (/(blocked|off[- ]track|major issue|slip|severe)/.test(t)) return /** @type {StatusColor} */ ("red");
+        if (/(at risk|risk|watch|slowing|slight slip)/.test(t)) return /** @type {StatusColor} */ ("yellow");
+        if (/(on track|green|back on track|good progress|healthy)/.test(t)) return /** @type {StatusColor} */ ("green");
+        return null;
+      }
+
+      function inferReadiness(text, kind) {
+        const t = text.toLowerCase();
+        if (kind === "qa") {
+          if (/(qa ready|ready for qa|handed to qa)/.test(t)) return true;
+          if (/(qa not ready|qa pending|needs qa|before qa)/.test(t)) return false;
+        } else if (kind === "prod") {
+          if (/(production ready|prod ready|ready for prod|ready for production|launched)/.test(t)) return true;
+          if (/(not prod ready|before prod|pre[- ]prod)/.test(t)) return false;
+        }
+        return null;
+      }
+
+      function computeNotesSuggestions(rawNotes) {
+        const notes = String(rawNotes || "");
+        const lines = notes.split(/\r?\n/);
+        const lowerLines = lines.map((l) => l.toLowerCase());
+        /** @type {Array<{id:string,name:string,status:StatusColor|null,qaReady:boolean|null,productionReady:boolean|null,latestUpdate:string|null}>} */
+        const suggestions = [];
+
+        for (const ws of workstreams) {
+          const nameLower = ws.name.toLowerCase();
+          /** @type {string[]} */
+          const snippets = [];
+          for (let i = 0; i < lines.length; i++) {
+            if (!lowerLines[i].includes(nameLower)) continue;
+            const start = Math.max(0, i - 1);
+            const end = Math.min(lines.length - 1, i + 1);
+            const chunk = lines.slice(start, end + 1).join("\n").trim();
+            if (chunk && !snippets.includes(chunk)) snippets.push(chunk);
+          }
+          if (!snippets.length) continue;
+          const snippetText = snippets.join("\n\n");
+          const sStatus = inferStatus(snippetText);
+          const sQa = inferReadiness(snippetText, "qa");
+          const sProd = inferReadiness(snippetText, "prod");
+          const cleanedUpdate = snippetText.trim() || null;
+          if (sStatus === null && sQa === null && sProd === null && !cleanedUpdate) continue;
+          suggestions.push({
+            id: ws.id,
+            name: ws.name,
+            status: sStatus,
+            qaReady: sQa,
+            productionReady: sProd,
+            latestUpdate: cleanedUpdate
+          });
+        }
+
+        return suggestions;
+      }
+
+      function renderNotesPreview(suggestions) {
+        const preview = document.getElementById("notesPreview");
+        const applyBtn = document.getElementById("notesApplyBtn");
+        if (!preview || !applyBtn) return;
+        if (!suggestions.length) {
+          preview.innerHTML =
+            '<div style="font-size:12px;color:var(--muted-2);">No workstream mentions were detected in the notes. Try adding explicit workstream names.</div>';
+          applyBtn.disabled = true;
+          return;
+        }
+
+        const parts = [];
+        parts.push('<div style="display:flex;flex-direction:column;gap:8px;">');
+        for (const s of suggestions) {
+          const ws = workstreams.find((w) => w.id === s.id);
+          if (!ws) continue;
+          parts.push('<div style="padding:8px 10px;border-radius:6px;border:1px solid var(--border-subtle);background:rgba(18,26,38,0.85);">');
+          parts.push(`<div style="font-weight:600;font-size:13px;margin-bottom:4px;">${escapeHtml(s.name)}</div>`);
+          parts.push('<ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.4;">');
+          if (s.status !== null) {
+            parts.push(
+              `<li>Status: <span class="mono">${escapeHtml(statusLabel(ws.status))}</span> → <strong>${escapeHtml(
+                statusLabel(s.status)
+              )}</strong></li>`
+            );
+          }
+          if (s.qaReady !== null) {
+            parts.push(
+              `<li>QA readiness: <span class="mono">${escapeHtml(readinessLabel(ws.qaReady))}</span> → <strong>${escapeHtml(
+                readinessLabel(s.qaReady)
+              )}</strong></li>`
+            );
+          }
+          if (s.productionReady !== null) {
+            parts.push(
+              `<li>Prod readiness: <span class="mono">${escapeHtml(
+                readinessLabel(ws.productionReady)
+              )}</span> → <strong>${escapeHtml(readinessLabel(s.productionReady))}</strong></li>`
+            );
+          }
+          if (s.latestUpdate) {
+            parts.push("<li>Latest update will be replaced with:</li>");
+            parts.push(
+              `<li style="margin-top:2px;"><pre style="white-space:pre-wrap;font-family:var(--font-mono);font-size:11px;background:rgba(0,0,0,0.35);padding:6px 8px;border-radius:4px;">${escapeHtml(
+                s.latestUpdate
+              )}</pre></li>`
+            );
+          }
+          parts.push("</ul>");
+          parts.push("</div>");
+        }
+        parts.push("</div>");
+        preview.innerHTML = parts.join("");
+        applyBtn.disabled = false;
+      }
+
+      function analyzeNotes() {
+        const input = document.getElementById("notesInput");
+        if (!input) return;
+        pendingNotesUpdates = computeNotesSuggestions(input.value);
+        renderNotesPreview(pendingNotesUpdates);
+      }
+
+      function applyNotesUpdates() {
+        if (!pendingNotesUpdates.length) {
+          closeNotes();
+          return;
+        }
+        const now = new Date().toISOString();
+        for (const s of pendingNotesUpdates) {
+          const ws = workstreams.find((w) => w.id === s.id);
+          if (!ws) continue;
+          if (s.status !== null) ws.status = s.status;
+          if (s.qaReady !== null) ws.qaReady = s.qaReady;
+          if (s.productionReady !== null) ws.productionReady = s.productionReady;
+          if (s.latestUpdate) ws.latestUpdate = s.latestUpdate;
+          ws.lastUpdatedAt = now;
+        }
+        saveWorkstreams();
+        pendingNotesUpdates = [];
+        closeNotes();
+        render();
+      }
+
+      document.addEventListener("keydown", (event) => {
+        const paletteBackdrop = document.getElementById("commandPaletteBackdrop");
+        const isPaletteOpen = paletteBackdrop && paletteBackdrop.classList.contains("open");
+        const isEditable = (el) => {
+          const t = el && el.tagName && el.tagName.toLowerCase();
+          return t === "input" || t === "textarea" || t === "select" || !!(el && el.isContentEditable);
+        };
+
+        if (event.key === "Escape" || event.key === "Esc") {
+          if (isPaletteOpen) {
+            closeCommandPalette();
+            return;
+          }
+          if (insightsOpen) {
+            closeInsightsSidebar();
+            return;
+          }
+          if (filtersOpen) {
+            closeFiltersSidebar();
+            return;
+          }
+          const aiModal = document.getElementById("aiModal");
+          if (!aiModal.hidden) {
+            closeAiInsights();
+            return;
+          }
+          const summaryModal = document.getElementById("summaryModal");
+          if (!summaryModal.hidden) {
+            closeSummary();
+            return;
+          }
+          const notesModal = document.getElementById("notesModal");
+          if (notesModal && !notesModal.hidden) {
+            closeNotes();
+            return;
+          }
+          const modal = document.getElementById("editModal");
+          if (!modal.hidden) closeEdit();
+          return;
+        }
+
+        if (isPaletteOpen) {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter") return;
+        }
+
+        if (!isEditable(event.target)) {
+          if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+            event.preventDefault();
+            openCommandPalette(false);
+            return;
+          }
+          if (event.key === "/") {
+            event.preventDefault();
+            openCommandPalette(true);
+            return;
+          }
+          if (event.key === "f") {
+            event.preventDefault();
+            openFiltersSidebar();
+            return;
+          }
+          if (event.key === "i") {
+            event.preventDefault();
+            openInsightsSidebar();
+            openDrawer("aiDrawer");
+            return;
+          }
+          if (event.key === "u") {
+            event.preventDefault();
+            openNotes();
+            return;
+          }
+          if (event.key === "g") {
+            event.preventDefault();
+            openSummary();
+            return;
+          }
+        }
+      });
+
+      function filterDisplayName(value) {
+        switch (value) {
+          case "on-track":
+            return "On Track";
+          case "at-risk":
+            return "At Risk";
+          case "off-track":
+            return "Off Track";
+          case "qa-ready":
+            return "QA Ready";
+          case "prod-ready":
+            return "Production Ready";
+          default:
+            return "All workstreams";
+        }
+      }
+
+      function updateFilterUi() {
+        const group = document.getElementById("filterGroup");
+        if (group) {
+          for (const btn of group.querySelectorAll(".filterBtn")) {
+            btn.classList.toggle("filterBtnActive", btn.getAttribute("data-filter") === activeFilter);
+          }
+        }
+
+        const kpiCards = document.querySelectorAll("[data-kpi-filter]");
+        for (const card of kpiCards) {
+          const key = card.getAttribute("data-kpi-filter");
+          card.classList.toggle("kpiCardActive", key === activeFilter);
+        }
+
+        const labelEl = document.getElementById("activeFilterText");
+        const clearBtn = document.getElementById("clearFilterBtn");
+        if (labelEl) {
+          labelEl.textContent = filterDisplayName(activeFilter);
+        }
+        if (clearBtn) {
+          const isDefault = activeFilter === "all";
+          clearBtn.disabled = isDefault;
+          clearBtn.style.opacity = isDefault ? "0.5" : "1";
+        }
+      }
+
+      function openFiltersSidebar() {
+        const sidebar = document.getElementById("filterSidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+        if (!sidebar || !backdrop) return;
+        if (insightsOpen) {
+          closeInsightsSidebar();
+        }
+        filtersOpen = true;
+        sidebar.classList.add("open");
+        backdrop.classList.add("open");
+      }
+
+      function closeFiltersSidebar() {
+        const sidebar = document.getElementById("filterSidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+        if (!sidebar || !backdrop) return;
+        filtersOpen = false;
+        sidebar.classList.remove("open");
+        if (!insightsOpen) {
+          backdrop.classList.remove("open");
+        }
+      }
+
+      function toggleFiltersSidebar() {
+        if (filtersOpen) closeFiltersSidebar();
+        else openFiltersSidebar();
+      }
+
+      function openInsightsSidebar() {
+        const sidebar = document.getElementById("insightsSidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+        if (!sidebar || !backdrop) return;
+        if (filtersOpen) {
+          closeFiltersSidebar();
+        }
+        insightsOpen = true;
+        sidebar.classList.add("open");
+        backdrop.classList.add("open");
+      }
+
+      function closeInsightsSidebar() {
+        const sidebar = document.getElementById("insightsSidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+        if (!sidebar || !backdrop) return;
+        insightsOpen = false;
+        sidebar.classList.remove("open");
+        if (!filtersOpen) {
+          backdrop.classList.remove("open");
+        }
+      }
+
+      function toggleInsightsSidebar() {
+        if (insightsOpen) closeInsightsSidebar();
+        else openInsightsSidebar();
+      }
+
+      function setActiveFilter(value) {
+        activeFilter = value || "all";
+        render();
+      }
+
+      function matchesFilter(ws) {
+        switch (activeFilter) {
+          case "on-track":
+            return ws.status === "green";
+          case "at-risk":
+            return ws.status === "yellow";
+          case "off-track":
+            return ws.status === "red";
+          case "qa-ready":
+            return !!ws.qaReady;
+          case "prod-ready":
+            return !!ws.productionReady;
+          default:
+            return true;
+        }
+      }
+
+      function matchesSearch(ws) {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          (ws.name && ws.name.toLowerCase().includes(q)) ||
+          (ws.latestUpdate && ws.latestUpdate.toLowerCase().includes(q))
+        );
+      }
+
+      function setupFilters() {
+        const group = document.getElementById("filterGroup");
+        if (!group) return;
+        group.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+          const value = target.getAttribute("data-filter");
+          if (!value) return;
+          setActiveFilter(value);
+        });
+      }
+
+      function setupSearch() {
+        const input = document.getElementById("searchInput");
+        if (!input) return;
+        input.addEventListener("input", () => {
+          searchQuery = input.value.trim();
+          render();
+        });
+      }
+
+      const clearFilterBtn = document.getElementById("clearFilterBtn");
+      if (clearFilterBtn) {
+        clearFilterBtn.addEventListener("click", () => {
+          setActiveFilter("all");
+        });
+      }
+
+      document.getElementById("toggleFiltersBtn").addEventListener("click", toggleFiltersSidebar);
+      document.getElementById("closeFiltersBtn").addEventListener("click", closeFiltersSidebar);
+      document.getElementById("closeInsightsBtn").addEventListener("click", closeInsightsSidebar);
+      document.getElementById("sidebarBackdrop").addEventListener("click", () => {
+        closeFiltersSidebar();
+        closeInsightsSidebar();
+      });
+
+      function setupSort() {
+        const select = document.getElementById("sortSelect");
+        if (!select) return;
+        select.addEventListener("change", () => {
+          sortMode = select.value || "name";
+          render();
+        });
+      }
+
+      function sortWorkstreams(list) {
+        const copy = [...list];
+        if (sortMode === "status") {
+          const order = { green: 0, yellow: 1, red: 2 };
+          copy.sort((a, b) => {
+            const oa = order[a.status] ?? 99;
+            const ob = order[b.status] ?? 99;
+            if (oa !== ob) return oa - ob;
+            return a.name.localeCompare(b.name);
+          });
+        } else if (sortMode === "pi-desc") {
+          copy.sort((a, b) => {
+            const diff = (b.piProgressPct ?? 0) - (a.piProgressPct ?? 0);
+            if (diff !== 0) return diff;
+            return a.name.localeCompare(b.name);
+          });
+        } else if (sortMode === "risk-desc") {
+          copy.sort((a, b) => {
+            const diff = computeRiskScore(b) - computeRiskScore(a);
+            if (diff !== 0) return diff;
+            return a.name.localeCompare(b.name);
+          });
+        } else {
+          copy.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return copy;
+      }
+
+      function getProgressBand(progress) {
+        if (progress >= 80) return "advanced";
+        if (progress >= 50) return "mid-flight";
+        return "early";
+      }
+
+      function getDashboardContext() {
+        const kpi = computeKpis(workstreams);
+        const summary = computeSummary(workstreams);
+        const sortedByRisk = workstreams
+          .filter((w) => Array.isArray(w.risks) && w.risks.length > 0)
+          .sort((a, b) => {
+            const statusOrder = { red: 0, yellow: 1, green: 2 };
+            const diff = (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+            if (diff !== 0) return diff;
+            return a.piProgressPct - b.piProgressPct;
+          });
+
+        const blocked = workstreams.filter((w) => w.status === "red");
+        const atRisk = workstreams.filter((w) => w.status === "yellow");
+        const readyForQa = workstreams.filter((w) => w.qaReady).map((w) => w.name);
+        const readyForProd = workstreams.filter((w) => w.productionReady).map((w) => w.name);
+        const reminderHeavy = workstreams
+          .filter((w) => Array.isArray(w.reminders) && w.reminders.length > 0)
+          .sort((a, b) => b.reminders.length - a.reminders.length);
+
+        return {
+          kpi,
+          summary,
+          blocked,
+          atRisk,
+          readyForQa,
+          readyForProd,
+          sortedByRisk,
+          reminderHeavy
+        };
+      }
+
+      function listNames(items) {
+        return items.map((item) => item.name).join(", ") || "None";
+      }
+
+      function firstItem(list, fallback) {
+        return list && list.length ? list[0] : fallback;
+      }
+
+      function numberLines(lines) {
+        return lines.map((line, index) => `${index + 1}. ${line}`).join("\n\n");
+      }
+
+      function generateAiInsight(kind) {
+        const { kpi, summary, blocked, atRisk, readyForQa, readyForProd, sortedByRisk, reminderHeavy } =
+          getDashboardContext();
+        const leadRisk = sortedByRisk[0];
+        const topReminderStream = reminderHeavy[0];
+
+        if (kind === "risk") {
+          const lines = [];
+          lines.push(`Risk Summary: ${summary.offTrack} off track, ${summary.atRisk} at risk, ${summary.onTrack} on track.`);
+          lines.push(
+            blocked.length
+              ? `Primary escalation area: ${listNames(blocked)}. These workstreams are most likely to pressure PI commitments.`
+              : "There are no off-track workstreams right now, which lowers immediate schedule risk."
+          );
+          lines.push(
+            atRisk.length
+              ? `Monitor closely: ${listNames(atRisk)}. These workstreams need active follow-up before they degrade further.`
+              : "No yellow-status workstreams are currently flagged."
+          );
+          if (leadRisk) {
+            lines.push(
+              `Most concentrated risk signal: ${leadRisk.name}. Current status is ${statusLabel(leadRisk.status).toLowerCase()}, PI progress is ${formatPct(
+                leadRisk.piProgressPct
+              )}, and the leading risk is "${firstItem(leadRisk.risks, "No risk detail captured.")}".`
+            );
+          }
+          lines.push(
+            readyForQa.length
+              ? `QA capacity should be planned for: ${readyForQa.join(", ")}.`
+              : "No workstreams are QA ready yet, so validation remains a near-term bottleneck."
+          );
+          return lines.join("\n\n");
+        }
+
+        if (kind === "leadership") {
+          const lines = [];
+          lines.push(`${PROGRAM_NAME} is averaging ${formatPct(kpi.piProgressAvgPct)} PI progress.`);
+          lines.push(
+            `${summary.onTrack} workstreams are on track, ${summary.atRisk} are at risk, and ${summary.offTrack} are off track.`
+          );
+          lines.push(
+            `QA readiness stands at ${kpi.qaReadyCount}, while ${kpi.prodReadyCount} workstreams are production ready.`
+          );
+          lines.push(
+            blocked.length
+              ? `Leadership attention is most needed on ${listNames(blocked)} due to dependency or delivery risk.`
+              : "No off-track workstreams currently require executive escalation."
+          );
+          lines.push(
+            readyForProd.length
+              ? `Delivery momentum is strongest in ${readyForProd.join(", ")}, which are already production ready.`
+              : "No workstreams are production ready yet, so downstream rollout planning should stay provisional."
+          );
+          return lines.join("\n\n");
+        }
+
+        if (kind === "actions") {
+          const actions = [];
+          if (blocked.length) {
+            actions.push(
+              `Escalate blockers on ${blocked[0].name} and align owners against "${firstItem(
+                blocked[0].risks,
+                "unresolved dependency"
+              )}".`
+            );
+          }
+          if (atRisk.length) {
+            actions.push(
+              `Run a focused check-in for ${atRisk[0].name} to improve confidence on status, readiness, and remaining work.`
+            );
+          }
+          if (readyForQa.length) {
+            actions.push(`Confirm QA bandwidth and sequencing for ${readyForQa.join(", ")}.`);
+          } else {
+            actions.push("Identify what must change to move at least one workstream into QA-ready status this week.");
+          }
+          if (topReminderStream) {
+            actions.push(
+              `Review reminders on ${topReminderStream.name}, especially "${firstItem(
+                topReminderStream.reminders,
+                "No reminder recorded."
+              )}", to prevent avoidable follow-up misses.`
+            );
+          }
+          return numberLines(actions);
+        }
+
+        if (kind === "questions") {
+          const questions = [];
+          if (leadRisk) {
+            questions.push(`What specific mitigation is in place for "${firstItem(leadRisk.risks, "the top risk")}" in ${leadRisk.name}?`);
+          }
+          questions.push("Which workstream is most likely to change status before the next PI checkpoint, and what evidence supports that?");
+          questions.push(
+            readyForQa.length
+              ? `Are the QA-ready workstreams (${readyForQa.join(", ")}) fully staffed for validation and defect triage?`
+              : "What is preventing the next workstream from becoming QA ready?"
+          );
+          questions.push(
+            readyForProd.length
+              ? `What launch dependencies remain for the production-ready workstreams (${readyForProd.join(", ")})?`
+              : "What would need to happen to move one workstream into production-ready status?"
+          );
+          questions.push("Are any reminders signaling an ownership gap, decision bottleneck, or documentation risk?");
+          return numberLines(questions);
+        }
+
+        const lines = [];
+        lines.push(`${PROGRAM_NAME} is currently ${getProgressBand(kpi.piProgressAvgPct)} with average PI progress at ${formatPct(kpi.piProgressAvgPct)}.`);
+        lines.push(
+          `${summary.onTrack} workstreams are on track, ${summary.atRisk} are at risk, and ${summary.offTrack} are off track.`
+        );
+        lines.push(`QA readiness is ${kpi.qaReadyCount} and production readiness is ${kpi.prodReadyCount}.`);
+        lines.push(
+          blocked.length
+            ? `The main delivery concern is ${listNames(blocked)}, where schedule confidence is weakest.`
+            : "There are no off-track workstreams, which indicates healthy near-term execution."
+        );
+        lines.push(
+          leadRisk
+            ? `${leadRisk.name} carries the strongest risk signal, with the current concern captured as "${firstItem(
+                leadRisk.risks,
+                "No detailed risk listed."
+              )}".`
+            : "No explicit risks are currently captured across the workstreams."
+        );
+        lines.push(
+          topReminderStream
+            ? `Immediate PM follow-up should include reminder hygiene on ${topReminderStream.name}, starting with "${firstItem(
+                topReminderStream.reminders,
+                "No reminder detail recorded."
+              )}".`
+            : "No reminders are currently recorded, so PM follow-up items may be under-documented."
+        );
+        return lines.join("\n\n");
+      }
+
+      function getProjectionSummary() {
+        const kpi = computeKpis(workstreams);
+        if (kpi.piProgressAvgPct >= 80) return "On track to complete this PI";
+        if (kpi.piProgressAvgPct >= 50) return "Slight slip risk";
+        return "High slip risk";
+      }
+
+      function generateProjectionText() {
+        const kpi = computeKpis(workstreams);
+        const summary = computeSummary(workstreams);
+        const label = getProjectionSummary();
+        return [
+          `Projection: ${label}.`,
+          `Average PI progress is ${formatPct(kpi.piProgressAvgPct)} across ${workstreams.length} workstreams.`,
+          `${summary.onTrack} streams are green, ${summary.atRisk} are yellow, and ${summary.offTrack} are red.`,
+          kpi.prodReadyCount > 0
+            ? `${kpi.prodReadyCount} workstreams are already production ready, which provides delivery cushion.`
+            : "No workstreams are production ready yet, so forecast confidence depends on resolving current blockers quickly."
+        ].join("\n\n");
+      }
+
+      function generateTimelineText() {
+        const blocked = workstreams.filter((w) => w.status === "red");
+        const atRisk = workstreams.filter((w) => w.status === "yellow");
+        const fastest = [...workstreams].sort((a, b) => b.piProgressPct - a.piProgressPct)[0];
+        return [
+          `Forecast signal: ${getProjectionSummary()}.`,
+          fastest
+            ? `${fastest.name} is the most advanced stream at ${formatPct(fastest.piProgressPct)} and is the best signal for near-term delivery confidence.`
+            : "No workstreams are available for forecast analysis.",
+          blocked.length
+            ? `Schedule pressure is concentrated in ${listNames(blocked)} and should be treated as the key forecast dependency.`
+            : "There are no off-track streams, which improves short-term forecast stability.",
+          atRisk.length
+            ? `${listNames(atRisk)} should be treated as checkpoint items before the next PI review.`
+            : "No yellow-status streams are currently softening the forecast."
+        ].join("\n\n");
+      }
+
+      function generateStatusText() {
+        const kpi = computeKpis(workstreams);
+        const summary = computeSummary(workstreams);
+        const onTrack = workstreams.filter((w) => w.status === "green").map((w) => w.name);
+        const atRisk = workstreams.filter((w) => w.status === "yellow").map((w) => w.name);
+        const offTrack = workstreams.filter((w) => w.status === "red").map((w) => w.name);
+
+        const lines = [];
+        lines.push(`Program: ${kpi.programName}`);
+        lines.push(`Average PI progress: ${formatPct(kpi.piProgressAvgPct)}`);
+        lines.push(`QA Ready: ${kpi.qaReadyCount}`);
+        lines.push(`Production Ready: ${kpi.prodReadyCount}`);
+        lines.push(`On Track workstreams (${summary.onTrack}): ${onTrack.join(", ") || "None"}`);
+        lines.push(`At Risk workstreams (${summary.atRisk}): ${atRisk.join(", ") || "None"}`);
+        lines.push(`Off Track workstreams (${summary.offTrack}): ${offTrack.join(", ") || "None"}`);
+        return lines.join("\n");
+      }
+
+      function setActiveInsight(kind) {
+        activeInsight = kind || "summary";
+        const container = document.getElementById("aiInsightButtons");
+        if (container) {
+          for (const btn of container.querySelectorAll("[data-insight]")) {
+            btn.classList.toggle("insightBtnActive", btn.getAttribute("data-insight") === activeInsight);
+          }
+        }
+        const output = document.getElementById("aiOutputText");
+        if (output) {
+          output.value = generateAiInsight(activeInsight);
+        }
+
+        const drawerContainer = document.getElementById("aiDrawerButtons");
+        if (drawerContainer) {
+          for (const btn of drawerContainer.querySelectorAll("[data-drawer-insight]")) {
+            btn.classList.toggle("insightBtnActive", btn.getAttribute("data-drawer-insight") === activeInsight);
+          }
+        }
+        const drawerOutput = document.getElementById("aiDrawerOutputText");
+        if (drawerOutput) {
+          drawerOutput.value = generateAiInsight(activeInsight);
+        }
+      }
+
+      function openAiInsights() {
+        const modal = document.getElementById("aiModal");
+        setActiveInsight(activeInsight);
+        modal.hidden = false;
+      }
+
+      function closeAiInsights() {
+        const modal = document.getElementById("aiModal");
+        modal.hidden = true;
+      }
+
+      async function copyFromTextarea(textareaId) {
+        const textArea = document.getElementById(textareaId);
+        if (!textArea) return;
+        const value = textArea.value;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(value);
+          } else {
+            textArea.select();
+            document.execCommand("copy");
+          }
+        } catch {
+          // swallow copy errors
+        }
+      }
+
+      function openDrawer(drawerId) {
+        const drawer = document.getElementById(drawerId);
+        if (!drawer) return;
+        drawer.open = true;
+        drawer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      function openSummary() {
+        const modal = document.getElementById("summaryModal");
+        const textArea = document.getElementById("summaryText");
+        textArea.value = generateStatusText();
+        modal.hidden = false;
+      }
+
+      function closeSummary() {
+        const modal = document.getElementById("summaryModal");
+        modal.hidden = true;
+      }
+
+      const summaryBackdrop = document.getElementById("summaryModal");
+      summaryBackdrop.addEventListener("click", (event) => {
+        if (event.target === summaryBackdrop) {
+          closeSummary();
+        }
+      });
+
+      const aiBackdrop = document.getElementById("aiModal");
+      aiBackdrop.addEventListener("click", (event) => {
+        if (event.target === aiBackdrop) {
+          closeAiInsights();
+        }
+      });
+
+      const notesBackdrop = document.getElementById("notesModal");
+      if (notesBackdrop) {
+        notesBackdrop.addEventListener("click", (event) => {
+          if (event.target === notesBackdrop) {
+            closeNotes();
+          }
+        });
+      }
+
+      document.getElementById("summaryCloseTop").addEventListener("click", closeSummary);
+      document.getElementById("summaryCloseBottom").addEventListener("click", closeSummary);
+      document.getElementById("aiCloseTop").addEventListener("click", closeAiInsights);
+      document.getElementById("aiCloseBottom").addEventListener("click", closeAiInsights);
+
+      document.getElementById("notesBtn").addEventListener("click", openNotes);
+      document.getElementById("notesCloseTop").addEventListener("click", closeNotes);
+      document.getElementById("notesCancelBottom").addEventListener("click", closeNotes);
+      document.getElementById("notesGenerateBtn").addEventListener("click", analyzeNotes);
+      document.getElementById("notesApplyBtn").addEventListener("click", applyNotesUpdates);
+
+      function openCommandPalette(omitSlash) {
+        const backdrop = document.getElementById("commandPaletteBackdrop");
+        const input = document.getElementById("commandPaletteInput");
+        if (!backdrop || !input) return;
+        backdrop.classList.add("open");
+        backdrop.setAttribute("aria-hidden", "false");
+        input.value = "";
+        paletteFiltered = COMMAND_PALETTE_COMMANDS.slice();
+        paletteSelectedIndex = 0;
+        renderPaletteList();
+        input.focus();
+      }
+
+      function closeCommandPalette() {
+        const backdrop = document.getElementById("commandPaletteBackdrop");
+        const input = document.getElementById("commandPaletteInput");
+        if (!backdrop || !input) return;
+        backdrop.classList.remove("open");
+        backdrop.setAttribute("aria-hidden", "true");
+        input.value = "";
+      }
+
+      function renderPaletteList() {
+        const listEl = document.getElementById("commandPaletteList");
+        if (!listEl) return;
+        listEl.innerHTML = "";
+        paletteFiltered.forEach((cmd, idx) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "commandPaletteItem" + (idx === paletteSelectedIndex ? " selected" : "");
+          item.setAttribute("role", "option");
+          item.setAttribute("data-command-id", cmd.id);
+          item.innerHTML = `<span>${escapeHtml(cmd.label)}</span>${cmd.shortcut ? `<span class="shortcut">${escapeHtml(cmd.shortcut)}</span>` : ""}`;
+          item.addEventListener("click", () => runPaletteCommand(cmd.id));
+          listEl.appendChild(item);
+        });
+      }
+
+      function updatePaletteSelection() {
+        const listEl = document.getElementById("commandPaletteList");
+        if (!listEl) return;
+        const items = listEl.querySelectorAll(".commandPaletteItem");
+        items.forEach((el, idx) => el.classList.toggle("selected", idx === paletteSelectedIndex));
+        const selected = items[paletteSelectedIndex];
+        if (selected) selected.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+
+      function runPaletteCommand(id) {
+        switch (id) {
+          case "open-filters":
+            openFiltersSidebar();
+            break;
+          case "open-insights":
+            openInsightsSidebar();
+            openDrawer("aiDrawer");
+            break;
+          case "open-notes":
+            openNotes();
+            break;
+          case "open-status":
+            openSummary();
+            break;
+          case "filter-on-track":
+            setActiveFilter("on-track");
+            break;
+          case "filter-at-risk":
+            setActiveFilter("at-risk");
+            break;
+          case "filter-off-track":
+            setActiveFilter("off-track");
+            break;
+          case "filter-qa-ready":
+            setActiveFilter("qa-ready");
+            break;
+          case "filter-prod-ready":
+            setActiveFilter("prod-ready");
+            break;
+          case "sort-name":
+            sortMode = "name";
+            const sortSelectName = document.getElementById("sortSelect");
+            if (sortSelectName) sortSelectName.value = "name";
+            render();
+            break;
+          case "sort-pi":
+            sortMode = "pi-desc";
+            const sortSelectPi = document.getElementById("sortSelect");
+            if (sortSelectPi) sortSelectPi.value = "pi-desc";
+            render();
+            break;
+          case "sort-risk":
+            sortMode = "risk-desc";
+            const sortSelectRisk = document.getElementById("sortSelect");
+            if (sortSelectRisk) sortSelectRisk.value = "risk-desc";
+            render();
+            break;
+        }
+        closeCommandPalette();
+      }
+
+      const commandPaletteBackdrop = document.getElementById("commandPaletteBackdrop");
+      const commandPaletteInput = document.getElementById("commandPaletteInput");
+      const commandPaletteList = document.getElementById("commandPaletteList");
+      if (commandPaletteBackdrop) {
+        commandPaletteBackdrop.addEventListener("click", (event) => {
+          if (event.target === commandPaletteBackdrop) closeCommandPalette();
+        });
+      }
+      if (commandPaletteInput) {
+        commandPaletteInput.addEventListener("input", () => {
+          const q = commandPaletteInput.value.trim().toLowerCase();
+          paletteFiltered = q
+            ? COMMAND_PALETTE_COMMANDS.filter(
+                (c) =>
+                  c.label.toLowerCase().includes(q) || (c.keywords && c.keywords.toLowerCase().includes(q))
+              )
+            : COMMAND_PALETTE_COMMANDS.slice();
+          paletteSelectedIndex = 0;
+          renderPaletteList();
+        });
+        commandPaletteInput.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            if (paletteFiltered.length) {
+              paletteSelectedIndex = (paletteSelectedIndex + 1) % paletteFiltered.length;
+              updatePaletteSelection();
+            }
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            if (paletteFiltered.length) {
+              paletteSelectedIndex = (paletteSelectedIndex - 1 + paletteFiltered.length) % paletteFiltered.length;
+              updatePaletteSelection();
+            }
+          } else if (event.key === "Enter") {
+            event.preventDefault();
+            if (paletteFiltered[paletteSelectedIndex]) runPaletteCommand(paletteFiltered[paletteSelectedIndex].id);
+          }
+        });
+      }
+
+      document.getElementById("summaryCopyBtn").addEventListener("click", () => copyFromTextarea("summaryText"));
+      document.getElementById("aiCopyBtn").addEventListener("click", () => copyFromTextarea("aiOutputText"));
+      document.getElementById("aiDrawerCopyBtn").addEventListener("click", () => copyFromTextarea("aiDrawerOutputText"));
+
+      document.getElementById("statusUpdateBtn").addEventListener("click", openSummary);
+      document.getElementById("aiInsightsBtn").addEventListener("click", () => {
+        openInsightsSidebar();
+        openDrawer("aiDrawer");
+      });
+
+      const aiInsightButtons = document.getElementById("aiInsightButtons");
+      aiInsightButtons.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const kind = target.getAttribute("data-insight");
+        if (!kind) return;
+        setActiveInsight(kind);
+      });
+
+      const aiDrawerButtons = document.getElementById("aiDrawerButtons");
+      aiDrawerButtons.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const kind = target.getAttribute("data-drawer-insight");
+        if (!kind) return;
+        setActiveInsight(kind);
+      });
+
+      function render() {
+        const kpi = computeKpis(workstreams);
+        const summary = computeSummary(workstreams);
+        const health = computeProgramHealth(kpi, summary);
+
+        document.title = kpi.programName;
+        document.getElementById("lastRefreshed").textContent = new Date().toLocaleString();
+
+        const kpisEl = document.getElementById("kpis");
+        kpisEl.innerHTML = "";
+        const programCard = kpiCard(
+          "Program",
+          escapeHtml(kpi.programName),
+          "Reset filters"
+        );
+        programCard.classList.add("kpiCardFilter");
+        programCard.setAttribute("data-kpi-filter", "all");
+        programCard.addEventListener("click", () => setActiveFilter("all"));
+        kpisEl.appendChild(programCard);
+
+        const healthCard = kpiCard(
+          "Program Health",
+          health.label,
+          health.reason
+        );
+        kpisEl.appendChild(healthCard);
+
+        kpisEl.appendChild(kpiCard("PI Progress", formatPct(kpi.piProgressAvgPct), "Average"));
+
+        const qaCard = kpiCard("QA Ready", String(kpi.qaReadyCount), "Click to filter");
+        qaCard.classList.add("kpiCardFilter");
+        qaCard.setAttribute("data-kpi-filter", "qa-ready");
+        qaCard.addEventListener("click", () => setActiveFilter("qa-ready"));
+        kpisEl.appendChild(qaCard);
+
+        const prodCard = kpiCard(
+          "Production Ready",
+          String(kpi.prodReadyCount),
+          "Click to filter"
+        );
+        prodCard.classList.add("kpiCardFilter");
+        prodCard.setAttribute("data-kpi-filter", "prod-ready");
+        prodCard.addEventListener("click", () => setActiveFilter("prod-ready"));
+        kpisEl.appendChild(prodCard);
+
+        const summaryEl = document.getElementById("summaryKpis");
+        if (summaryEl) {
+          summaryEl.innerHTML = "";
+          const onCard = kpiCard("On Track", String(summary.onTrack), "Click to filter");
+          onCard.classList.add("kpiCardFilter");
+          onCard.setAttribute("data-kpi-filter", "on-track");
+          onCard.addEventListener("click", () => setActiveFilter("on-track"));
+          summaryEl.appendChild(onCard);
+
+          const riskCard = kpiCard(
+            "At Risk",
+            String(summary.atRisk),
+            "Click to filter"
+          );
+          riskCard.classList.add("kpiCardFilter");
+          riskCard.setAttribute("data-kpi-filter", "at-risk");
+          riskCard.addEventListener("click", () => setActiveFilter("at-risk"));
+          summaryEl.appendChild(riskCard);
+
+          const offCard = kpiCard(
+            "Off Track",
+            String(summary.offTrack),
+            "Click to filter"
+          );
+          offCard.classList.add("kpiCardFilter");
+          offCard.setAttribute("data-kpi-filter", "off-track");
+          offCard.addEventListener("click", () => setActiveFilter("off-track"));
+          summaryEl.appendChild(offCard);
+        }
+
+        const projectionMeta = document.getElementById("projectionDrawerMeta");
+        if (projectionMeta) projectionMeta.textContent = getProjectionSummary();
+        const projectionText = document.getElementById("projectionDrawerText");
+        if (projectionText) projectionText.textContent = generateProjectionText();
+        const riskText = document.getElementById("riskDrawerText");
+        if (riskText) riskText.textContent = generateAiInsight("risk");
+        const leadershipText = document.getElementById("leadershipDrawerText");
+        if (leadershipText) leadershipText.textContent = generateAiInsight("leadership");
+        const timelineText = document.getElementById("timelineDrawerText");
+        if (timelineText) timelineText.textContent = generateTimelineText();
+        setActiveInsight(activeInsight);
+
+        const cardsEl = document.getElementById("cards");
+        cardsEl.innerHTML = "";
+        const filtered = workstreams.filter((ws) => matchesFilter(ws) && matchesSearch(ws));
+        const visible = sortWorkstreams(filtered);
+        for (const ws of visible) cardsEl.appendChild(wsCard(ws));
+        if (visible.length === 0) {
+          const empty = document.createElement("div");
+          empty.style.gridColumn = "1 / -1";
+          empty.style.color = "var(--muted-2)";
+          empty.style.fontSize = "13px";
+          empty.textContent = "No workstreams match the current filters.";
+          cardsEl.appendChild(empty);
+        }
+
+        updateFilterUi();
+      }
+
+      setupFilters();
+      setupSearch();
+      setupSort();
+      render();
+    </script>
+  </body>
+</html>
